@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bhai Assistant</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: #071414;
+        color: white;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .box {
+        width: 90%;
+        max-width: 420px;
+        text-align: center;
+        padding: 30px 20px;
+        border-radius: 25px;
+        background: #102222;
+        box-shadow: 0 0 35px rgba(0, 220, 200, .2);
+    }
+
+    h1 {
+        color: #00e6d0;
+        margin-bottom: 8px;
+    }
+
+    #status {
+        color: #aaa;
+        margin-bottom: 25px;
+    }
+
+    #mic {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        border: none;
+        background: #00bfae;
+        color: white;
+        font-size: 45px;
+        cursor: pointer;
+        box-shadow: 0 0 30px rgba(0, 230, 208, .4);
+    }
+
+    #mic:active {
+        transform: scale(.95);
+    }
+
+    #result {
+        margin-top: 25px;
+        min-height: 50px;
+        color: #ddd;
+        line-height: 1.5;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+    <h1>BHai Assistant</h1>
+    <div id="status">Ready — mic dabao 🎙️</div>
+
+    <button id="mic">🎙️</button>
+
+    <div id="result">Say something...</div>
+</div>
+
+<script>
+
+const statusText = document.getElementById("status");
+const result = document.getElementById("result");
+const mic = document.getElementById("mic");
+
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+    statusText.innerText =
+        "Speech recognition is not supported in this browser.";
+}
+
+const recognition = SpeechRecognition
+    ? new SpeechRecognition()
+    : null;
+
+if (recognition) {
+
+    recognition.lang = "en-IN";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = function () {
+        statusText.innerText = "Listening... 👂";
+        mic.style.background = "#ff5252";
+    };
+
+    recognition.onend = function () {
+        statusText.innerText = "Ready — mic dabao 🎙️";
+        mic.style.background = "#00bfae";
+    };
+
+    recognition.onerror = function (event) {
+        statusText.innerText =
+            "Mic error: " + event.error;
+        mic.style.background = "#00bfae";
+    };
+
+    recognition.onresult = function (event) {
+
+        const command =
+            event.results[0][0].transcript.toLowerCase();
+
+        result.innerText = "You: " + command;
+
+        handleCommand(command);
+    };
+
+    mic.onclick = function () {
+        recognition.start();
+    };
+}
+
+
+// -------------------------
+// VOICE RESPONSE
+// -------------------------
+
+function speak(text) {
+
+    result.innerText = "Assistant: " + text;
+
+    const speech =
+        new SpeechSynthesisUtterance(text);
+
+    speech.lang = "en-IN";
+    speech.rate = 1;
+    speech.pitch = 1;
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(speech);
+}
+
+
+// -------------------------
+// COMMAND SYSTEM
+// -------------------------
+
+function handleCommand(command) {
+
+    // YouTube
+    if (
+        command.includes("youtube") ||
+        command.includes("you tube")
+    ) {
+        speak("YouTube khol raha hoon.");
+
+        setTimeout(() => {
+            window.location.href =
+                "https://www.youtube.com";
+        }, 800);
+
+        return;
+    }
+
+
+    // Google
+    if (
+        command.includes("google") ||
+        command.includes("search")
+    ) {
+
+        speak("Google khol raha hoon.");
+
+        setTimeout(() => {
+            window.location.href =
+                "https://www.google.com";
+        }, 800);
+
+        return;
+    }
+
+
+    // Maps
+    if (
+        command.includes("maps") ||
+        command.includes("map")
+    ) {
+
+        speak("Maps khol raha hoon.");
+
+        setTimeout(() => {
+            window.location.href =
+                "https://maps.google.com";
+        }, 800);
+
+        return;
+    }
+
+
+    // Hello
+    if (
+        command.includes("hello") ||
+        command.includes("hi") ||
+        command.includes("hey")
+    ) {
+        speak("Hello bhai! Kya scene hai?");
+        return;
+    }
+
+
+    // Name
+    if (
+        command.includes("your name") ||
+        command.includes("tumhara naam")
+    ) {
+        speak("Main Bhai Assistant hoon.");
+        return;
+    }
+
+
+    // Time
+    if (
+        command.includes("time") ||
+        command.includes("samay")
+    ) {
+
+        const now = new Date();
+
+        const time =
+            now.toLocaleTimeString(
+                "en-IN",
+                {
+                    hour: "numeric",
+                    minute: "2-digit"
+                }
+            );
+
+        speak("Abhi time hai " + time);
+        return;
+    }
+
+
+    // Unknown command
+    speak(
+        "Ye command abhi mere system mein nahi hai. "
+        + "AI brain connect karne ke baad main isko samajh sakunga."
+    );
+}
+
+</script>
+
+</body>
+</html>
