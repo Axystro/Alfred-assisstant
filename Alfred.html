@@ -1,263 +1,479 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bhai Assistant</title>
+
+<title>Alfred Assistant</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-    }
 
-    body {
-        margin: 0;
-        min-height: 100vh;
-        background: #071414;
-        color: white;
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+* {
+    box-sizing: border-box;
+}
 
-    .box {
-        width: 90%;
-        max-width: 420px;
-        text-align: center;
-        padding: 30px 20px;
-        border-radius: 25px;
-        background: #102222;
-        box-shadow: 0 0 35px rgba(0, 220, 200, .2);
-    }
+body {
+    margin: 0;
+    min-height: 100vh;
 
-    h1 {
-        color: #00e6d0;
-        margin-bottom: 8px;
-    }
+    background: #071414;
+    color: white;
 
-    #status {
-        color: #aaa;
-        margin-bottom: 25px;
-    }
+    font-family: Arial, sans-serif;
 
-    #mic {
-        width: 110px;
-        height: 110px;
-        border-radius: 50%;
-        border: none;
-        background: #00bfae;
-        color: white;
-        font-size: 45px;
-        cursor: pointer;
-        box-shadow: 0 0 30px rgba(0, 230, 208, .4);
-    }
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    #mic:active {
-        transform: scale(.95);
-    }
+.box {
+    width: 90%;
+    max-width: 420px;
 
-    #result {
-        margin-top: 25px;
-        min-height: 50px;
-        color: #ddd;
-        line-height: 1.5;
-    }
+    text-align: center;
+
+    padding: 30px 20px;
+
+    border-radius: 25px;
+
+    background: #102222;
+
+    box-shadow:
+        0 0 35px rgba(0, 220, 200, 0.2);
+}
+
+h1 {
+    color: #00e6d0;
+    margin-bottom: 8px;
+}
+
+#status {
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+#mic {
+    width: 110px;
+    height: 110px;
+
+    border-radius: 50%;
+    border: none;
+
+    background: #00bfae;
+    color: white;
+
+    font-size: 45px;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 0 30px rgba(0, 230, 208, 0.4);
+}
+
+#mic:active {
+    transform: scale(0.95);
+}
+
+#result {
+    margin-top: 25px;
+
+    min-height: 80px;
+
+    color: #ddd;
+
+    line-height: 1.5;
+}
+
 </style>
 </head>
 
 <body>
 
 <div class="box">
-    <h1>BHai Assistant</h1>
-    <div id="status">Ready — mic dabao 🎙️</div>
 
-    <button id="mic">🎙️</button>
+    <h1>ALFRED</h1>
 
-    <div id="result">Say something...</div>
+    <div id="status">
+        Ready — mic dabao 🎙️
+    </div>
+
+    <button id="mic">
+        🎙️
+    </button>
+
+    <div id="result">
+        Say something...
+    </div>
+
 </div>
+
 
 <script>
 
-const statusText = document.getElementById("status");
-const result = document.getElementById("result");
-const mic = document.getElementById("mic");
+// ===============================
+// ALFRED CONFIG
+// ===============================
+
+const WORKER_URL =
+"https://alfred-ai.r-khatoon-7172.workers.dev/";
+
+
+// ===============================
+// ELEMENTS
+// ===============================
+
+const statusText =
+document.getElementById("status");
+
+const result =
+document.getElementById("result");
+
+const mic =
+document.getElementById("mic");
+
+
+// ===============================
+// SPEECH RECOGNITION
+// ===============================
 
 const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
+window.SpeechRecognition ||
+window.webkitSpeechRecognition;
+
 
 if (!SpeechRecognition) {
+
     statusText.innerText =
-        "Speech recognition is not supported in this browser.";
-}
+    "Speech recognition is not supported.";
 
-const recognition = SpeechRecognition
-    ? new SpeechRecognition()
-    : null;
+} else {
 
-if (recognition) {
+    const recognition =
+    new SpeechRecognition();
 
     recognition.lang = "en-IN";
+
     recognition.continuous = false;
+
     recognition.interimResults = false;
 
+
+    // ===============================
+    // START LISTENING
+    // ===============================
+
     recognition.onstart = function () {
-        statusText.innerText = "Listening... 👂";
-        mic.style.background = "#ff5252";
+
+        statusText.innerText =
+        "Listening... 👂";
+
+        mic.style.background =
+        "#ff5252";
     };
+
+
+    // ===============================
+    // STOP LISTENING
+    // ===============================
 
     recognition.onend = function () {
-        statusText.innerText = "Ready — mic dabao 🎙️";
-        mic.style.background = "#00bfae";
+
+        statusText.innerText =
+        "Ready — mic dabao 🎙️";
+
+        mic.style.background =
+        "#00bfae";
     };
+
+
+    // ===============================
+    // MICROPHONE ERROR
+    // ===============================
 
     recognition.onerror = function (event) {
+
         statusText.innerText =
-            "Mic error: " + event.error;
-        mic.style.background = "#00bfae";
+        "Mic error: " + event.error;
+
+        mic.style.background =
+        "#00bfae";
     };
 
-    recognition.onresult = function (event) {
+
+    // ===============================
+    // VOICE RESULT
+    // ===============================
+
+    recognition.onresult =
+    async function (event) {
 
         const command =
-            event.results[0][0].transcript.toLowerCase();
+        event.results[0][0].transcript;
 
-        result.innerText = "You: " + command;
+        result.innerText =
+        "You: " + command;
 
-        handleCommand(command);
+        await handleCommand(command);
     };
+
+
+    // ===============================
+    // MIC BUTTON
+    // ===============================
 
     mic.onclick = function () {
-        recognition.start();
+
+        try {
+
+            recognition.start();
+
+        } catch (error) {
+
+            console.log(error);
+        }
     };
+
 }
 
 
-// -------------------------
-// VOICE RESPONSE
-// -------------------------
+// ===============================
+// SPEAK
+// ===============================
 
 function speak(text) {
 
-    result.innerText = "Assistant: " + text;
+    result.innerText =
+    "Alfred: " + text;
 
     const speech =
-        new SpeechSynthesisUtterance(text);
+    new SpeechSynthesisUtterance(text);
 
     speech.lang = "en-IN";
+
     speech.rate = 1;
+
     speech.pitch = 1;
 
     window.speechSynthesis.cancel();
+
     window.speechSynthesis.speak(speech);
 }
 
 
-// -------------------------
-// COMMAND SYSTEM
-// -------------------------
+// ===============================
+// ASK AI
+// ===============================
 
-function handleCommand(command) {
+async function askAI(message) {
 
-    // YouTube
+    statusText.innerText =
+    "Thinking... 🧠";
+
+    try {
+
+        const response =
+        await fetch(WORKER_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+
+                message: message
+
+            })
+
+        });
+
+
+        const data =
+        await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "AI request failed"
+            );
+        }
+
+
+        speak(
+            data.reply ||
+            "Sorry bhai, answer nahi mila."
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        speak(
+            "Sorry bhai, AI connection mein problem aa rahi hai."
+        );
+    }
+}
+
+
+// ===============================
+// COMMAND HANDLER
+// ===============================
+
+async function handleCommand(command) {
+
+    const text =
+    command.toLowerCase();
+
+
+    // ===============================
+    // YOUTUBE
+    // ===============================
+
     if (
-        command.includes("youtube") ||
-        command.includes("you tube")
+        text.includes("youtube") ||
+        text.includes("you tube")
     ) {
-        speak("YouTube khol raha hoon.");
 
-        setTimeout(() => {
+        speak(
+            "YouTube khol raha hoon."
+        );
+
+        setTimeout(function () {
+
             window.location.href =
-                "https://www.youtube.com";
-        }, 800);
+            "https://www.youtube.com";
+
+        }, 1000);
 
         return;
     }
 
 
-    // Google
+    // ===============================
+    // GOOGLE
+    // ===============================
+
     if (
-        command.includes("google") ||
-        command.includes("search")
+        text.includes("google") ||
+        text.includes("search")
     ) {
 
-        speak("Google khol raha hoon.");
+        speak(
+            "Google khol raha hoon."
+        );
 
-        setTimeout(() => {
+        setTimeout(function () {
+
             window.location.href =
-                "https://www.google.com";
-        }, 800);
+            "https://www.google.com";
+
+        }, 1000);
 
         return;
     }
 
 
-    // Maps
+    // ===============================
+    // MAPS
+    // ===============================
+
     if (
-        command.includes("maps") ||
-        command.includes("map")
+        text.includes("maps") ||
+        text.includes("map")
     ) {
 
-        speak("Maps khol raha hoon.");
+        speak(
+            "Maps khol raha hoon."
+        );
 
-        setTimeout(() => {
+        setTimeout(function () {
+
             window.location.href =
-                "https://maps.google.com";
-        }, 800);
+            "https://maps.google.com";
+
+        }, 1000);
 
         return;
     }
 
 
-    // Hello
+    // ===============================
+    // HELLO
+    // ===============================
+
     if (
-        command.includes("hello") ||
-        command.includes("hi") ||
-        command.includes("hey")
+        text.includes("hello") ||
+        text.includes("hi") ||
+        text.includes("hey")
     ) {
-        speak("Hello bhai! Kya scene hai?");
+
+        speak(
+            "Hello bhai! Kya scene hai?"
+        );
+
         return;
     }
 
 
-    // Name
+    // ===============================
+    // NAME
+    // ===============================
+
     if (
-        command.includes("your name") ||
-        command.includes("tumhara naam")
+        text.includes("your name") ||
+        text.includes("tumhara naam")
     ) {
-        speak("Main Bhai Assistant hoon.");
+
+        speak(
+            "Main Alfred hoon, tumhara AI assistant."
+        );
+
         return;
     }
 
 
-    // Time
+    // ===============================
+    // TIME
+    // ===============================
+
     if (
-        command.includes("time") ||
-        command.includes("samay")
+        text.includes("time") ||
+        text.includes("samay")
     ) {
 
-        const now = new Date();
+        const now =
+        new Date();
 
         const time =
-            now.toLocaleTimeString(
-                "en-IN",
-                {
-                    hour: "numeric",
-                    minute: "2-digit"
-                }
-            );
+        now.toLocaleTimeString(
+            "en-IN",
+            {
+                hour: "numeric",
+                minute: "2-digit"
+            }
+        );
 
-        speak("Abhi time hai " + time);
+        speak(
+            "Abhi time hai " +
+            time
+        );
+
         return;
     }
 
 
-    // Unknown command
-    speak(
-        "Ye command abhi mere system mein nahi hai. "
-        + "AI brain connect karne ke baad main isko samajh sakunga."
-    );
+    // ===============================
+    // AI FALLBACK
+    // ===============================
+
+    await askAI(command);
+
 }
 
 </script>
